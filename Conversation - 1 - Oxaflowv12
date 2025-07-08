@@ -1,0 +1,12 @@
+2772-Gestion-des-llms-api-sur-Pocket
+------------------------------------------------
+Pour les LlmApis, quand mon application reçoit un LlmApi.dto depuis Oxahub(le serveur backend), je prends l'uuid de LlmApiKey pour l'uuid du LlmApi.
+Maintenant, dans le Llmapi dto fourni depuis Oxahub, on aura un uuid spécifique pour LlmApi qui est différent que celui de LlmApiKey.
+
+Du coup dans le mapper pour llmapi de mon application, je devrai changer des logics correspondants, pour mapper correctement ces 2 uuids.
+-------------------------------------------------
+Quand j'envoie une requête de suppression d'un llm api, avec le `deleteLlmApi` dans `OxaHubLlmApi.service.ts`, j'ai vu que l'uuid passé était celui du LlmApiKey, mais pas celui du LlmApi.
+
+J'ai checké le `fromLlmApiDtoTtoLlm` dans Llm.mapper.ts, ça m'a l'air correct.
+
+Tu dois donc m'aider à localiser où l'uuid est passé incorrectement, que l'uuid de la clé(LlmApiKey) se présente à la place de celui de LlmApi quand je supprime un LlmApi.
