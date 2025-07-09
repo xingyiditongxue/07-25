@@ -1,0 +1,72 @@
+YOUPI la version à tester à été :
+push sur la branche {{ variables.newBranchName }}
+publié sur Google Drive à cette adresse 
+https://drive.google.com/file/d/{{variables.gdriveDistId}}/view
+la MR a été publié à cette adresse https://git.oxyl.fr/oracle-fabricium/{{variables.projectId}}/-/merge_requests/{{variables.mrId}}
+"
+
+
+// Pour pouvoir récuperer les snippets de code via le scrapping, le prompt du rapport lui dit d'utiliser un
+// double  au lieu de triple pour les snippets de code. Cette fonction va donc transformer ces endroits là en triple  pour que le snippet Markdown s'affiche bien
+// De même pour les # Markdown. Le scrapping nous permet pas de récupérer plusieurs dieses à la suite. On dit donc au créateur de rapport de retourner .#. à la place d'un #.
+// (Le LLM nous répond donc .#..#..#. au lieu de ###)
+const formatCodeSnippets = (scrappedCodeReport) => {
+  return scrappedCodeReport.replace(/``(?!`)/g, '
+').replace(/\.#\./g, '#');
+
+};
+
+const getMRTitle = (scrappedCodeReport) => {
+  return scrappedCodeReport.split('.')[0];
+};
+
+const createMergeRequest = async () => {
+  const projectId = automaRefData('variables', 'projectId');
+  const privateToken = automaRefData('variables', 'privateToken');
+  const sourceBranch = automaRefData('variables', 'newBranchName');
+  const targetBranch = automaRefData('variables', 'branchName');
+  const codeReport = automaRefData('variables', 'codeReport');
+  const title = [OXAFLOW] ${getMRTitle(codeReport)};
+  // On pourra remplacer #X par l'id ticket quand/si on l'aura un jour.
+  const description = `Closes #X\n\nRapport de changements : \n\n${formatCodeSnippets(
+    codeReport
+  )}`;
+  const url = `https://git.oxyl.fr/api/v4/projects/${encodeURIComponent(
+    projectId
+  )}/merge_requests`;
+
+  console.log('projectId:', projectId);
+  console.log('privateToken:', privateToken);
+  console.log('sourceBranch:', sourceBranch);
+  console.log('targetBranch:', targetBranch);
+  console.log('title:', title);
+  console.log('description:', description);
+  console.log('url:', url);
+
+  try {
+    const response = await automaFetch('json', {
+      url,
+      method: 'POST',
+      headers: {
+        'PRIVATE-TOKEN': privateToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source_branch: sourceBranch,
+        target_branch: targetBranch,
+        title,
+        description
+      })
+    });
+
+    const mrId = response.id;
+    console.log('ID de la MR:', mrId);
+    automaRefData('variables', 'mrId', mrId);
+    
+    return response;
+  } catch (error) {
+    console.error('Erreur lors de la création de la merge request:', error);
+    throw error; // Rethrow l'erreur pour un traitement ultérieur si nécessaire
+  }
+};
+createMergeRequest().then(() => automaNextBlock());
