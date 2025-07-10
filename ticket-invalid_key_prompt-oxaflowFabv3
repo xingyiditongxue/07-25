@@ -13,3 +13,40 @@ Du coup il ne faut pas traiter ça comme un 400 normal, on doit pouvoir identifi
 QUOI : Gérer spécifiquement l'erreur "invalid_api_key" renvoyée par l'API GPT.
 OÙ : Dans le fichier src/background/models/steps/gpt/GptApi.executor.ts.
 COMMENT : En surchargeant la méthode makeApiCall de la classe BaseApiExecutor. La nouvelle méthode interceptera les erreurs Axios. Si une erreur a un statut 400 et que le corps de la réponse contient code: 'invalid_api_key', une OxaError avec le code MISSING_API_KEY sera levée. Pour toutes les autres erreurs, le comportement de la classe de base sera répliqué pour assurer une gestion cohérente des erreurs.
+
+------------------------------------------------------
+Veuillez valider le plan créé par l'IA par "OK" si il vous parait clair ou rajoutez des éléments si besoin : 
+Plan d'Action
+
+Vérification et Ajout du Code d'Erreur
+1.1. Ouvrir le fichier src/common/shared/errors/OxaErrorCode.enum.ts.
+1.2. Vérifier si la valeur MISSING_API_KEY existe déjà dans l'enum OxaErrorCode.
+1.3. Si elle n'existe pas, l'ajouter en respectant l'ordre alphabétique pour maintenir la lisibilité et la cohérence du fichier.
+
+Typage de la Réponse d'Erreur de l'API GPT
+2.1. Ouvrir le fichier src/common/internal/models/api/GptApiRequest.model.ts.
+2.2. Définir une interface pour la structure de l'erreur renvoyée par l'API GPT afin d'éviter l'utilisation de any ou unknown sans validation.
+```typescript
+export interface GptApiError {
+code: string;
+message: string;
+type: string;
+}
+
+Generated code
+export interface GptApiErrorResponse {
+  error: GptApiError;
+}
+```
+
+2.3. Créer une fonction de type guard isGptApiErrorResponse pour valider la structure de l'objet d'erreur.
+typescript export function isGptApiErrorResponse(obj: unknown): obj is GptApiErrorResponse { return ( typeof obj === 'object' && obj !== null && 'error' in obj && typeof (obj as { error: unknown }).error === 'object' && (obj as { error: unknown }).error !== null && 'code' in (obj as { error: { code: unknown } }).error && typeof (obj as { error: { code: unknown } }).error.code === 'string' ); }
+
+Surcharge de la Gestion d'Erreur dans GptApiExecutor
+3.1. Ouvrir le fichier src/background/models/steps/gpt/GptApi.executor.ts.
+3.2. Importer les nouveaux types et dépendances nécessaires :
+- axios et StatusCodes depuis leurs paquets respectifs.
+- ApiConfig depuis src/background/models/steps/BaseApiExecutor.ts.
+- GptApiErrorResponse et isGptApiErrorResponse depuis src/common/internal/models/api/GptApiRequest.model.ts.
+- S'assurer que les imports sont en ordre alphabétique.
+3.3. Surcharger la m
