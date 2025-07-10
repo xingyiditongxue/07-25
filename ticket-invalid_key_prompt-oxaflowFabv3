@@ -1,0 +1,11 @@
+2791-Gestion-centralisée-des-erreurs-invalid_key
+______________________________________________________
+Dans gptapi.executor.ts, on a beacoup de execute fonctions qui tappent sur l'endpoint "https://api.openai.com/v1/responses". Quand on offre une clé api invalide à GPT, on reçoit une errue 400 avec cet objet d'erreur:
+{
+    "message": "Incorrect API key provided: dddddddd********dddd. You can find your API key at https://platform.openai.com/account/api-keys.",
+    "type": "invalid_request_error",
+    "param": null,
+    "code": "invalid_api_key"
+}
+
+Du coup il ne faut pas traiter ça comme un 400 normal, on doit pouvoir identifier "invalid_api_key" depuis le message d'erreur, et lever  un OxaError "invalid_key"
