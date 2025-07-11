@@ -1,5 +1,5 @@
-Pas besoin de générer de fichiers tests associés.
-Use code comments like // === Incoming Change === or diff-like markers (-, +) to indicate modifications
+Remarque: Pas besoin de générer de fichiers tests associés.
+Attention: Use code comments like // === Incoming Change === or diff-like markers (-, +) to indicate modifications
 _______________________________________________________
 2791-Gestion-centralisée-des-erreurs-invalid_key
 ______________________________________________________
