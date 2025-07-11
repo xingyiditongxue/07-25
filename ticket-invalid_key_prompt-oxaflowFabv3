@@ -1,3 +1,6 @@
+Pas besoin de générer de fichiers tests associés.
+Use code comments like // === Incoming Change === or diff-like markers (-, +) to indicate modifications
+_______________________________________________________
 2791-Gestion-centralisée-des-erreurs-invalid_key
 ______________________________________________________
 Dans gptapi.executor.ts, on a beacoup de execute fonctions qui tappent sur l'endpoint "https://api.openai.com/v1/responses". Quand on offre une clé api invalide à GPT, on reçoit une errue 400 avec cet objet d'erreur:
