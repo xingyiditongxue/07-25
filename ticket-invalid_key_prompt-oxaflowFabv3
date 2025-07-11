@@ -21,35 +21,291 @@ COMMENT : En surchargeant la méthode makeApiCall de la classe BaseApiExecutor. 
 Veuillez valider le plan créé par l'IA par "OK" si il vous parait clair ou rajoutez des éléments si besoin : 
 Plan d'Action
 
-Vérification et Ajout du Code d'Erreur
-1.1. Ouvrir le fichier src/common/shared/errors/OxaErrorCode.enum.ts.
-1.2. Vérifier si la valeur MISSING_API_KEY existe déjà dans l'enum OxaErrorCode.
-1.3. Si elle n'existe pas, l'ajouter en respectant l'ordre alphabétique pour maintenir la lisibilité et la cohérence du fichier.
+Vérification et Déclaration de l'Erreur
 
-Typage de la Réponse d'Erreur de l'API GPT
-2.1. Ouvrir le fichier src/common/internal/models/api/GptApiRequest.model.ts.
-2.2. Définir une interface pour la structure de l'erreur renvoyée par l'API GPT afin d'éviter l'utilisation de any ou unknown sans validation.
-```typescript
-export interface GptApiError {
-code: string;
-message: string;
-type: string;
+Dans le fichier src/common/shared/errors/OxaErrorCode.enum.ts, vérifier si l'erreur MISSING_API_KEY existe.
+
+!Si elle n'existe pas, l'ajouter à l'énumération OxaErrorCode.!
+
+Modification du GptApiExecutor
+
+2.1. Imports : Dans src/background/models/steps/gpt/GptApi.executor.ts, s'assurer que les imports suivants sont présents en utilisant des chemins absolus.
+
+Generated typescript
+import axios from 'axios';
+import { StatusCodes } from 'http-status-codes';
+import { OxaError } from '@/common/shared/errors/Oxa.error';
+import { OxaErrorCode } from '@/common/shared/errors/OxaErrorCode.enum';
+
+2.2. Surcharge de makeApiCall : Dans la classe GptApiExecutor, surcharger la méthode makeApiCall de BaseApiExecutor pour implémenter la gestion d'erreur spécifique à GPT.
+
+2.3. Logique d'erreur :
+
+Implémenter un bloc try...catch autour de l'appel axios.
+
+Dans le bloc try, appeler la méthode de la classe parente pour gérer les cas de succès et les erreurs standards : return await super.makeApiCall(url, payload, headers);.
+
+Dans le bloc catch, intercepter l'erreur.
+
+Vérifier si axios.isAxiosError(error) && error.response.
+
+Si la condition est vraie, vérifier si error.response.status === 400 et si le corps de la réponse (error.response.data) contient code: 'invalid_api_key'.
+
+Si cette condition spécifique est remplie, lancer une nouvelle OxaError : throw new OxaError(OxaErrorCode.MISSING_API_KEY, 'Invalid API Key provided for GPT API.');.
+
+Pour toutes les autres erreurs, les relancer pour qu'elles soient gérées par le catch de la classe BaseApiExecutor : throw error;.
+
+Création ou Adaptation des Tests
+
+Créer ou modifier le fichier de test src/background/models/steps/gpt/GptApi.executor.spec.ts.
+
+3.1. Test du cas d'erreur invalid_api_key :
+
+Mettre en place un mock d'axios qui simule une réponse avec un statut 400 et le corps de réponse { code: 'invalid_api_key' }.
+
+Créer un test qui appelle executeGPTApi (ou makeApiCall) et s'assure qu'une OxaError avec le code OxaErrorCode.MISSING_API_KEY est bien levée.
+
+3.2. Test de la délégation d'erreur :
+
+Mettre en place un mock d'axios qui simule une autre erreur (ex: statut 429 ou 500).
+
+Créer un test qui vérifie que l'erreur originale (ou l'erreur gérée par la classe parente comme GPT_API_RESOURCE_EXHAUSTED) est correctement propagée.
+
+3.3. Test du cas de succès :
+
+S'assurer qu'un test pour un appel API réussi existe et continue de passer.
+
+Analyse d'Impact et Vérification
+
+Effectuer une recherche globale sur OxaErrorCode.MISSING_API_KEY pour identifier si ce code d'erreur est déjà utilisé et comment il est traité par l'UI (ex: dans les services de notification ou les composants d'alerte).
+
+Vérifier le service Runner.service.ts pour s'assurer que la nouvelle OxaError est correctement capturée et transformée en RunnerResultError sans introduire de régression.
+
+Fichiers à Modifier ou vérifier
+
+!src/common/shared/errors/OxaErrorCode.enum.ts!
+
+!src/background/models/steps/gpt/GptApi.executor.ts!
+
+!src/background/models/steps/gpt/GptApi.executor.spec.ts (à créer ou modifier)!
+
+!src/background/models/steps/BaseApiExecutor.ts (pour vérifier la logique parente à déléguer)!
+
+src/background/services/Runner.service.ts (pour vérifier l'impact de la nouvelle erreur)
+_____________________________________________________________________________________________________________________________________________________________
+Veuillez valider le code créé par l'IA par "OK" si il vous parait clair ou rajoutez des éléments si besoin : 
+Generated markdown
+## Fichier: src/common/shared/errors/OxaErrorCode.enum.ts
+
+### Modification: Vérifier et ajouter MISSING_API_KEY si nécessaire (déjà présent)
+
+REMPLACER:
+  CANNOT_FETCH = 'cannot_fetch',
+
+  //features
+  CANNOT_FETCH_FEATURES = 'cannot_fetch_features'
 }
+
+export function isOxaErrorCode(obj: unknown): obj is OxaErrorCode {
+PAR:
+  CANNOT_FETCH = 'cannot_fetch',
+
+  //features
+  CANNOT_FETCH_FEATURES = 'cannot_fetch_features'
+}
+
+export function isOxaErrorCode(obj: unknown): obj is OxaErrorCode {
+Generated markdown
+## Fichier: src/background/models/steps/gpt/GptApi.executor.ts
+
+### Modification: Surcharger makeApiCall pour gérer l'erreur invalid_api_key
+
+REMPLACER:
+      throw error;
+    }
+  }
+}
+PAR:
+      throw error;
+    }
+  }
+
+  protected async makeApiCall<TPayload, TResponse>(
+    url: string,
+    payload: TPayload,
+    headers: Record<string, string>
+  ): Promise<TResponse> {
+    try {
+      return await super.makeApiCall(url, payload, headers);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        // GPT API specific error handling
+        if (error.response.status === StatusCodes.BAD_REQUEST &&
+            error.response.data && typeof error.response.data === 'object' &&
+            'code' in error.response.data && error.response.data.code === 'invalid_api_key') {
+          throw new OxaError(OxaErrorCode.MISSING_API_KEY, 'Invalid API Key provided for GPT API.');
+        }
+      }
+      // Rethrow other errors for BaseApiExecutor's handleApiError or other catch blocks
+      throw error;
+    }
+  }
+}
+Use code with caution.
+Markdown
+Generated markdown
+## Fichier: src/background/models/steps/gpt/GptApi.executor.spec.ts
+
+### Modification: Créer le fichier de test GptApi.executor.spec.ts avec les tests d'erreur et de succès
+
+REMPLACER:
+Use code with caution.
+Markdown
+
+/* This file does not exist in the provided code. It will be created. */
 
 Generated code
-export interface GptApiErrorResponse {
-  error: GptApiError;
-}
-```
+PAR:
+```typescript
+// ===== src/background/models/steps/gpt/GptApi.executor.spec.ts =====
 
-2.3. Créer une fonction de type guard isGptApiErrorResponse pour valider la structure de l'objet d'erreur.
-typescript export function isGptApiErrorResponse(obj: unknown): obj is GptApiErrorResponse { return ( typeof obj === 'object' && obj !== null && 'error' in obj && typeof (obj as { error: unknown }).error === 'object' && (obj as { error: unknown }).error !== null && 'code' in (obj as { error: { code: unknown } }).error && typeof (obj as { error: { code: unknown } }).error.code === 'string' ); }
+import axios from 'axios';
+import { StatusCodes } from 'http-status-codes';
 
-Surcharge de la Gestion d'Erreur dans GptApiExecutor
-3.1. Ouvrir le fichier src/background/models/steps/gpt/GptApi.executor.ts.
-3.2. Importer les nouveaux types et dépendances nécessaires :
-- axios et StatusCodes depuis leurs paquets respectifs.
-- ApiConfig depuis src/background/models/steps/BaseApiExecutor.ts.
-- GptApiErrorResponse et isGptApiErrorResponse depuis src/common/internal/models/api/GptApiRequest.model.ts.
-- S'assurer que les imports sont en ordre alphabétique.
-3.3. Surcharger la m
+import { GptApiExecutor } from '@/background/models/steps/gpt/GptApi.executor';
+import { OxaError } from '@/common/shared/errors/Oxa.error';
+import { OxaErrorCode } from '@/common/shared/errors/OxaErrorCode.enum';
+import { ConversationService } from '@/common/internal/services/Conversation.service';
+import { StateStep } from '@/common/internal/models/StateStep.model';
+import { Llm } from '@/common/internal/models/Llm.model';
+import { Message } from '@/common/shared/models/Message.model';
+import { SenderType } from '@/common/shared/models/SenderType.enum';
+
+// Mock axios
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe('GptApiExecutor', () => {
+  let executor: GptApiExecutor;
+  let mockConversationService: Partial<ConversationService>;
+
+  beforeEach(() => {
+    mockConversationService = {
+      getConversationByUuid: jest.fn().mockReturnValue({ messages: [] })
+    };
+    executor = new GptApiExecutor(mockConversationService as ConversationService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Helper to create a basic context
+  const createContext = (apiKey?: string, messageText: string = 'test message'): any => ({
+    message: {
+      uuid: 'msg-123',
+      conversationUuid: 'conv-123',
+      text: messageText,
+      apiKey: apiKey,
+      attachments: []
+    },
+    interlocutor: {
+      uuid: 'llm-gpt',
+      name: 'GPT',
+      icon: '',
+      summary: '',
+      serviceType: 'LLM',
+      stateStep: new StateStep('step-1', { uuid: 'step-1', name: 'GPT Step', description: '', isLLM: true, image: '', llmConfig: { type: 'GPT', scrappingPlatform: 'GPT', model: 'gpt-4' }, llmApiKeyPlatformUrl: 'http://gpt.api' }),
+      apiKey: apiKey ? { uuid: 'api-123', label: 'GPT Key', key: apiKey } : undefined
+    },
+    variables: {}
+  });
+
+  // 3.3. Test du cas de succès
+  test('should execute GPT API call successfully', async () => {
+    const mockResponseData = {
+      id: 'chatcmpl-123',
+      object: 'chat.completion',
+      created_at: 1678885376,
+      status: 'completed',
+      model: 'gpt-4',
+      output: [{
+        id: 'output-1',
+        type: 'text',
+        status: 'completed',
+        content: [{ type: 'output_text', text: 'Successful response' }],
+        role: 'assistant'
+      }],
+      usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 }
+    };
+    mockedAxios.mockResolvedValueOnce({ data: mockResponseData, status: StatusCodes.OK });
+
+    const context = createContext('fake-api-key');
+    const result = await executor.executeGPTApi(context, 'arg1');
+
+    expect(result).toBe('Successful response');
+    expect(mockedAxios).toHaveBeenCalledWith({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer fake-api-key' },
+      url: 'http://gpt.api/gpt-4:generateContent', // Assuming getApiUrl + getModel structure
+      data: JSON.stringify({ model: 'gpt-4', input: [{ role: 'user', content: 'arg1' }, { role: 'user', content: 'test message' }] })
+    });
+  });
+
+  // 3.1. Test du cas d'erreur invalid_api_key
+  test('should throw MISSING_API_KEY OxaError for invalid_api_key error', async () => {
+    const mockErrorResponse = {
+      response: {
+        status: StatusCodes.BAD_REQUEST,
+        data: {
+          code: 'invalid_api_key',
+          message: 'Invalid API key provided.'
+        }
+      },
+      isAxiosError: true,
+      message: 'Request failed with status code 400'
+    };
+    mockedAxios.mockRejectedValueOnce(mockErrorResponse);
+
+    const context = createContext('invalid-key');
+
+    await expect(executor.executeGPTApi(context, 'arg1')).rejects.toThrow(
+      new OxaError(OxaErrorCode.MISSING_API_KEY, 'Invalid API Key provided for GPT API.')
+    );
+  });
+
+  // 3.2. Test de la délégation d'erreur
+  test('should rethrow other Axios errors', async () => {
+    const mockOtherErrorResponse = {
+      response: {
+        status: StatusCodes.TOO_MANY_REQUESTS, // Example of another error status
+        data: {
+          message: 'Rate limit exceeded'
+        }
+      },
+      isAxiosError: true,
+      message: 'Request failed with status code 429'
+    };
+    mockedAxios.mockRejectedValueOnce(mockOtherErrorResponse);
+
+    const context = createContext('fake-api-key');
+
+    await expect(executor.executeGPTApi(context, 'arg1')).rejects.toThrow('Request failed with status code 429');
+  });
+
+  test('should rethrow non-Axios errors', async () => {
+    const mockNonAxiosError = new Error('Something went wrong');
+    mockedAxios.mockRejectedValueOnce(mockNonAxiosError);
+
+    const context = createContext('fake-api-key');
+
+    await expect(executor.executeGPTApi(context, 'arg1')).rejects.toThrow('Something went wrong');
+  });
+});
+Use code with caution.
+Generated code
+Use code with caution.
+Google Search Suggestions
+Display of Search Suggestions is required when using Grounding with Google Search. Learn more
+OxaErrorCode.enum.ts MISSING_API_KEY
+src/common/shared/errors/OxaErrorCode.enum.ts
