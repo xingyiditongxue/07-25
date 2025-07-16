@@ -197,3 +197,81 @@ Pour chaque nouveau code créé, je devrai également définir un message d'erre
 Par exemple, pour le cas dans ScrappingOutput.service.ts où l'erreur est new OxaError(OxaErrorCode.GENERIC_ERROR, 'Invalid LLM response'), je pourrais créer le code INVALID_LLM_RESPONSE et ajouter les traductions associées.
 
 Est-ce que cette approche vous convient ? Souhaitez-vous que je commence par vous lister toutes les modifications que je propose (nouveaux codes d'erreur et remplacements) pour validation avant de générer la spécification finale ?
+
+--------------------------------------------------------------------------------------------------------------------
+
+  QUOI : Remplacer les usages du code d'erreur OxaErrorCode.GENERIC_ERROR par des codes d'erreur plus spécifiques. Créer de nouveaux codes d'erreur dans OxaErrorCode.enum.ts si nécessaire, et ajouter les traductions correspondantes dans les fichiers en-GB.json et fr-FR.json.
+
+OÙ & COMMENT :
+
+Fichier : src/common/shared/errors/OxaErrorCode.enum.ts
+
+COMMENT : Ajouter les nouveaux codes d'erreur suivants à l'énumération OxaErrorCode :
+
+INVALID_LLM_RESPONSE
+
+ASSISTANT_NOT_PINNED
+
+UNEXPECTED_ERROR
+
+INVALID_RESPONSE_FROM_CONTENT_SCRIPT
+
+PENPOT_SEND_MESSAGE_ERROR
+
+INVALID_CHATBOT_RESPONSE
+
+INVALID_TAB_REQUEST_BODY
+
+Fichier : src/common/shared/i18n/fr-FR.json (et en-GB.json de manière équivalente)
+
+COMMENT : Ajouter les nouvelles clés de traduction pour les erreurs créées. Par exemple pour le français :
+
+"invalid_llm_response": "Réponse invalide du LLM"
+
+"assistant_not_pinned": "L'assistant {assistantUuid} n'est pas épinglé"
+
+"unexpected_error": "Une erreur inattendue est survenue"
+
+"invalid_response_from_content_script": "Réponse invalide du content script"
+
+"penpot_send_message_error": "Erreur lors de l'envoi du message à Penpot"
+
+"invalid_chatbot_response": "Réponse invalide du chatbot"
+
+"invalid_tab_request_body": "Corps de la requête de l'onglet invalide"
+
+Fichier : src/content-script/content/services/ScrappingOutput.service.ts
+
+OÙ : Dans la méthode scrapeAnswer, au niveau du throw new OxaError(...).
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_LLM_RESPONSE.
+
+Fichier : src/sidebar/front/services/Pin.service.ts
+
+OÙ : Dans la méthode getPinAssistant, au niveau du throw new OxaError(...).
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.ASSISTANT_NOT_PINNED.
+
+Fichier : src/common/shared/decorator/HandleControllerError.decorator.ts
+
+OÙ : Dans le bloc catch, pour le cas error instanceof Error.
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.UNEXPECTED_ERROR.
+
+Fichier : src/common/shared/models/MessageResponse.model.ts
+
+OÙ : Dans la fonction buildErrorMessageResponseFromError, pour le cas générique.
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.UNEXPECTED_ERROR.
+
+Fichier : src/content-script/content/services/Scrapping.service.ts
+
+OÙ : Dans la méthode scrapeChatBot, au niveau du response.send(buildErrorMessageResponse(...)).
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_CHATBOT_RESPONSE.
+
+Fichier : src/sidebar/controllers/ChatTab.controller.ts
+
+OÙ : Dans la méthode handleMessageToUser, au niveau du response.send(buildErrorMessageResponse(...)).
+
+COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_TAB_REQUEST_BODY.
