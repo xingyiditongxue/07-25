@@ -183,3 +183,17 @@ src/background/controllers/Autoxa.controller.spec.ts (à créer si non existant)
 src/background/services/Runner.service.spec.ts (à créer si non existant)
 
 src/content-script/content/services/ScrappingOutput.service.spec.ts (à créer si non existant)
+
+__________________________________________________________________________________________________________________
+
+Votre demande est assez large. Pour m'assurer de la comprendre correctement, confirmons les points suivants :
+
+Pour chaque OxaErrorCode.GENERIC_ERROR que vous avez identifié, je dois analyser le contexte et le remplacer par un code d'erreur plus spécifique.
+
+Si un code d'erreur approprié n'existe pas dans l'énumération OxaErrorCode, je devrai en proposer un nouveau.
+
+Pour chaque nouveau code créé, je devrai également définir un message d'erreur correspondant dans les fichiers de traduction fr-FR.json et en-GB.json.
+
+Par exemple, pour le cas dans ScrappingOutput.service.ts où l'erreur est new OxaError(OxaErrorCode.GENERIC_ERROR, 'Invalid LLM response'), je pourrais créer le code INVALID_LLM_RESPONSE et ajouter les traductions associées.
+
+Est-ce que cette approche vous convient ? Souhaitez-vous que je commence par vous lister toutes les modifications que je propose (nouveaux codes d'erreur et remplacements) pour validation avant de générer la spécification finale ?
