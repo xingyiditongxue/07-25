@@ -275,3 +275,124 @@ Fichier : src/sidebar/controllers/ChatTab.controller.ts
 OÙ : Dans la méthode handleMessageToUser, au niveau du response.send(buildErrorMessageResponse(...)).
 
 COMMENT : Remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_TAB_REQUEST_BODY.
+
+  _______________________________________________________________________________________________________
+
+Veuillez valider le plan créé par l'IA par "OK" si il vous parait clair ou rajoutez des éléments si besoin : 
+Plan d'Action
+
+Pré-requis : Vérification des fichiers
+
+Avant de commencer, vérifier la présence de tous les fichiers listés dans la section "Fichiers à Modifier ou vérifier". Si un fichier est introuvable, ne pas continuer et créer un ticket pour signaler l'anomalie.
+
+Étape 1 : Ajout des nouveaux codes d'erreur
+
+Dans le fichier src/common/shared/errors/OxaErrorCode.enum.ts, ajouter les nouvelles valeurs à l'énumération OxaErrorCode :
+
+INVALID_LLM_RESPONSE
+
+ASSISTANT_NOT_PINNED
+
+UNEXPECTED_ERROR
+
+INVALID_RESPONSE_FROM_CONTENT_SCRIPT
+
+PENPOT_SEND_MESSAGE_ERROR
+
+INVALID_CHATBOT_RESPONSE
+
+INVALID_TAB_REQUEST_BODY
+
+Étape 2 : Ajout des traductions i18n
+
+2.1. Dans src/common/shared/i18n/fr-FR.json, ajouter les clés de traduction pour les nouvelles erreurs :
+
+Generated json
+"invalid_llm_response": "Réponse invalide du LLM",
+"assistant_not_pinned": "L'assistant {assistantUuid} n'est pas épinglé",
+"unexpected_error": "Une erreur inattendue est survenue",
+"invalid_response_from_content_script": "Réponse invalide du content script",
+"penpot_send_message_error": "Erreur lors de l'envoi du message à Penpot",
+"invalid_chatbot_response": "Réponse invalide du chatbot",
+"invalid_tab_request_body": "Corps de la requête de l'onglet invalide"
+
+2.2. Dans src/common/shared/i18n/en-GB.json, ajouter les clés de traduction anglaises en s'assurant que la structure et les clés sont identiques au fichier fr-FR.json :
+
+Generated json
+"invalid_llm_response": "Invalid LLM response",
+"assistant_not_pinned": "Assistant {assistantUuid} is not pinned",
+"unexpected_error": "An unexpected error occurred",
+"invalid_response_from_content_script": "Invalid response from content script",
+"penpot_send_message_error": "Error sending message to Penpot",
+"invalid_chatbot_response": "Invalid chatbot response",
+"invalid_tab_request_body": "Invalid tab request body"
+Use code with caution.
+Json
+
+Étape 3 : Remplacement des codes d'erreur spécifiques
+
+4.1. Dans src/content-script/content/services/ScrappingOutput.service.ts, méthode scrapeAnswer, remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_LLM_RESPONSE.
+
+4.2. Dans src/common/internal/services/Pin.service.ts, méthode getPinAssistant, remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.ASSISTANT_NOT_PINNED.
+
+4.3. Dans src/common/shared/decorator/HandleControllerError.decorator.ts, dans le bloc catch, remplacer les deux occurrences de OxaErrorCode.GENERIC_ERROR par OxaErrorCode.UNEXPECTED_ERROR.
+
+4.4. Dans src/common/shared/models/MessageResponse.model.ts, fonction buildErrorMessageResponseFromError, remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.UNEXPECTED_ERROR dans le cas else final.
+
+4.5. Dans src/content-script/content/services/Scrapping.service.ts, méthode scrapeChatBot, remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_CHATBOT_RESPONSE.
+
+4.6. Dans src/sidebar/controllers/ChatTab.controller.ts, méthode handleMessageToUser, remplacer OxaErrorCode.GENERIC_ERROR par OxaErrorCode.INVALID_TAB_REQUEST_BODY.
+
+Étape 4 : Analyse d'Impact Globale
+
+Effectuer une recherche globale (sensible à la casse) de OxaErrorCode.GENERIC_ERROR dans l'ensemble du projet.
+
+Pour chaque occurrence trouvée non listée ci-dessus, analyser le contexte. Si un code d'erreur plus spécifique peut être utilisé, le remplacer. Sinon, valider que OxaErrorCode.UNEXPECTED_ERROR est le code le plus approprié.
+
+Étape 5 : Mise à Jour des Tests Unitaires
+
+Identifier tous les fichiers de test (.spec.ts) associés aux fichiers modifiés.
+
+Mettre à jour les assertions pour qu'elles attendent les nouveaux codes d'erreur (OxaErrorCode.INVALID_LLM_RESPONSE, OxaErrorCode.ASSISTANT_NOT_PINNED, etc.) au lieu de OxaErrorCode.GENERIC_ERROR.
+
+Vérifier les mocks et les stubs qui pourraient utiliser OxaErrorCode et les mettre à jour si nécessaire.
+
+Étape 6 : Validation Finale et respect des guidelines
+
+7.1. Vérifier que les modifications respectent les guidelines du projet (typage explicite, imports absolus et ordonnés, etc.).
+
+7.2. Lancer l'intégralité de la suite de tests en local et s'assurer qu'ils passent tous.
+
+7.3. Après avoir poussé les modifications, vérifier que le pipeline d'intégration continue (CI/CD) s'exécute avec succès.
+
+Fichiers à Modifier ou vérifier
+
+src/common/shared/errors/OxaErrorCode.enum.ts
+
+src/common/shared/i18n/fr-FR.json
+
+src/common/shared/i18n/en-GB.json
+
+src/content-script/content/services/ScrappingOutput.service.ts
+
+src/common/internal/services/Pin.service.ts
+
+src/common/shared/decorator/HandleControllerError.decorator.ts
+
+src/common/shared/models/MessageResponse.model.ts
+
+src/content-script/content/services/Scrapping.service.ts
+
+src/sidebar/controllers/ChatTab.controller.ts
+
+src/content-script/content/services/ScrappingOutput.service.spec.ts (à vérifier/créer)
+
+src/common/internal/services/Pin.service.spec.ts (à vérifier/créer)
+
+src/common/shared/decorator/HandleControllerError.decorator.spec.ts (à vérifier/créer)
+
+src/common/shared/models/MessageResponse.model.spec.ts (à vérifier/créer)
+
+src/content-script/content/services/Scrapping.service.spec.ts (à vérifier/créer)
+
+src/sidebar/controllers/ChatTab.controller.spec.ts (à vérifier/créer)
