@@ -210,3 +210,9 @@ describe('AutoxaController', () => {
 });
 Use code with caution.
 TypeScript
+
+______________________________________________________________________________________
+
+       Alors j'ai 2 questions:
+1. Est-ce que Jest est un bon choix pour faire des tests unitaires sur Typescript?
+2. Quand je dis "comment je peux produire l'erreur avec ces 2 fonctions", c'est qu'il te faut me décrire l'user story, le scénario qui produira ce genre d'erreur. L'explication des codes n'est pas critique, ce que je veux c'est les opérations que l'utilisateur doit faire pour reproduire l'erreur. 
